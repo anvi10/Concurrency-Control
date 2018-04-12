@@ -1,6 +1,7 @@
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.lang.Math;
 
 public class CC
 {
@@ -24,9 +25,26 @@ public class CC
 			t3 = new ArrayList<String>(Arrays.asList(transactions.get(2).split(";")));
 		}
 
-		System.out.println( "t1 " + t1);
-		System.out.println( "t2 " + t2);
-		System.out.println( "t3 " + t3);
+
+		int maxSize = -1;
+
+		int t1_size = t1.size();
+		int t2_size = t2.size();
+		int t3_size = t3.size();
+
+		maxSize = Math.max( Math.max(t1_size, t2_size) , t3_size);
+
+		int ptr = 0;
+		while ( ptr < maxSize ) {
+			if (ptr < t1_size) 
+				System.out.println( t1.get(ptr));
+			if (ptr < t2_size) 
+				System.out.println( t2.get(ptr));
+			if (ptr < t3_size) 
+				System.out.println( t3.get(ptr));
+		ptr++;
+		}
+
 
 		return null;
 
