@@ -21,6 +21,10 @@ public class CC
 		List<String> t2 = new ArrayList<String>(Arrays.asList(transactions.get(1).split(";")));
 		List<String> t3 = new ArrayList<String>();
 
+		List<String> t1_locks = new ArrayList<String>();
+		List<String> t2_locks = new ArrayList<String>();
+		List<String> t3_locks = new ArrayList<String>();
+
 		if (transactions.size() == 3) {
 			t3 = new ArrayList<String>(Arrays.asList(transactions.get(2).split(";")));
 		}
@@ -36,15 +40,73 @@ public class CC
 
 		int ptr = 0;
 		while ( ptr < maxSize ) {
-			if (ptr < t1_size) 
+
+			if (ptr < t1_size) {
+
+				if ( t1.get(ptr).charAt(0) == 'R') {
+					String s = Character.toString( t1.get(ptr).charAt(2) );
+					String sharedLock = "S(" + s + ")" ; 
+					String exclusiveLock = "X(" + s + ")" ; 
+					
+					if (  !t2_locks.contains(exclusiveLock) && !t3_locks.contains(exclusiveLock) && !t1_locks.contains(sharedLock) && !t1_locks.contains(exclusiveLock) ) {
+						t1_locks.add(sharedLock);
+					}
+
+				}
+
+				if ( t1.get(ptr).charAt(0) == 'C') {
+					t1_locks.clear();
+				}
+
 				System.out.println( t1.get(ptr));
-			if (ptr < t2_size) 
+			}
+
+			if (ptr < t2_size) {
+
+				if ( t2.get(ptr).charAt(0) == 'R') {
+					String s = Character.toString( t2.get(ptr).charAt(2) );
+					String sharedLock = "S(" + s + ")" ; 
+					String exclusiveLock = "X(" + s + ")" ; 
+					
+					if (  !t1_locks.contains(exclusiveLock) && !t3_locks.contains(exclusiveLock) && !t2_locks.contains(sharedLock) && !t2_locks.contains(exclusiveLock)) {
+						t2_locks.add(sharedLock);
+					}
+
+				}
+
+				if ( t2.get(ptr).charAt(0) == 'C') {
+					t2_locks.clear();
+				}
+
 				System.out.println( t2.get(ptr));
-			if (ptr < t3_size) 
+			}
+
+			if (ptr < t3_size) {
+
+				if ( t3.get(ptr).charAt(0) == 'R') {
+					String s = Character.toString( t3.get(ptr).charAt(2) );
+					String sharedLock = "S(" + s + ")" ; 
+					String exclusiveLock = "X(" + s + ")" ; 
+					
+					if (  !t1_locks.contains(exclusiveLock) && !t2_locks.contains(exclusiveLock) && !t3_locks.contains(sharedLock) && !t3_locks.contains(exclusiveLock)) {
+						t3_locks.add(sharedLock);
+					}
+
+				}
+
+				if ( t3.get(ptr).charAt(0) == 'C') {
+					t3_locks.clear();
+				}
+
 				System.out.println( t3.get(ptr));
+			}
+
 		ptr++;
 		}
 
+		System.out.println(t1_locks);
+		System.out.println(t2_locks);
+		System.out.println(t3_locks);
 
 		return null;
 
