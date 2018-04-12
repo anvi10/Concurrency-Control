@@ -54,6 +54,25 @@ public class CC
 
 				}
 
+				//try the write method here
+				if ( t1.get(ptr).charAt(0) == 'W') {
+					//If the current transaction already has a Shared Lock (and no other transaction has any other locks) 
+					//you will upgrade the Shared Lock to an Exclusive lock.
+
+					String s = Character.toString( t1.get(ptr).charAt(2) );
+					String sharedLock = "S(" + s + ")" ; 
+					String exclusiveLock = "X(" + s + ")" ; 
+
+					if (t1_locks.contains(sharedLock)) {
+						//upgrade the sharedlock to an exclusive lock
+					}
+
+					//When a write operation is encountered, attempt to acquire an 
+					//Exclusive Lock on that record. An Exclusive Lock can be acquired 
+					//only if there is no other lock on that record from another transaction. 
+
+				}
+
 				if ( t1.get(ptr).charAt(0) == 'C') {
 					t1_locks.clear();
 				}
@@ -102,6 +121,7 @@ public class CC
 			}
 
 		ptr++;
+
 		}
 
 		System.out.println(t1_locks);
