@@ -71,7 +71,7 @@ public class CC
 
 						
 					if ( transaction.get(ptr).charAt(0) == 'R') {
-						timestamp++;
+						
 						String s = Character.toString( transaction.get(ptr).charAt(2) );
 						String sharedLock = "S(" + s + ")" ; 
 						String exclusiveLock = "X(" + s + ")" ; 
@@ -90,13 +90,14 @@ public class CC
 						        //method 1
 
         				System.out.println(timestamp);
+        				timestamp++;
 
 
 					}
 
 					
 					else if ( transaction.get(ptr).charAt(0) == 'W') {
-						timestamp++;
+						
 						String s = Character.toString( transaction.get(ptr).charAt(2) );
 						String sharedLock = "S(" + s + ")" ; 
 						String exclusiveLock = "X(" + s + ")" ; 
@@ -123,17 +124,19 @@ public class CC
 						        //method 1
 
        		 			System.out.println(timestamp);
+       		 			timestamp++;
 
 
 					}
 
 					else if ( transaction.get(ptr).charAt(0) == 'C') {
-						timestamp++;
+						
 						//clear all locks
 						transaction_locks.get(i).clear();
 						        //method 1
 
         				System.out.println(timestamp);
+        				timestamp++;
 					}
 
 					pointers.set( i,  pointers.get(i) + 1);
