@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.lang.Math;
 import java.sql.Timestamp;
 
-//write add old and new values to log
 //add pointer to prev log entry
 
 public class CC
@@ -63,9 +62,9 @@ public class CC
 				break;
 			}
 
-			
+			int prev_time = -1 ;
 			for (int i = 0 ; i < transactions.size(); i++) {
-
+				
 
 				if ( pointers.get(i) < transaction_list.get(i).size() ) {
 
@@ -94,8 +93,9 @@ public class CC
 						int transaction_number = i + 1;
 						int db_index = Character.getNumericValue(transaction.get(ptr).charAt(2) ) ;
 						int value_read = db[db_index];
-        				System.out.println( "R:" + timestamp + ",T" + transaction_number + "," + transaction.get(ptr).charAt(2) + "," + value_read ) ;
+        				System.out.println( "R:" + timestamp + ",T" + transaction_number + "," + transaction.get(ptr).charAt(2) + "," + value_read + "," + prev_time ) ;
         				timestamp++;
+        				prev_time = timestamp - 1;
 
 
 					}
@@ -132,8 +132,9 @@ public class CC
 						        //method 1
 
 						int transaction_number = i + 1;
-       		 			System.out.println( "W:" + timestamp + ",T" + transaction_number + "," + transaction.get(ptr).charAt(2) + "," + old_value + "," + db[db_index] ) ;
+       		 			System.out.println( "W:" + timestamp + ",T" + transaction_number + "," + transaction.get(ptr).charAt(2) + "," + old_value + "," + db[db_index] + "," + prev_time) ;
        		 			timestamp++;
+       		 			prev_time = timestamp - 1;
 
 
 					}
@@ -144,8 +145,9 @@ public class CC
 						transaction_locks.get(i).clear();
 						        //method 1
 						int transaction_number = i + 1;
-						System.out.println( "C:" + timestamp + ",T" + transaction_number) ;
+						System.out.println( "C:" + timestamp + ",T" + transaction_number + "," + prev_time ) ;
         				timestamp++;
+        				prev_time = timestamp - 1;
 					}
 
 					pointers.set( i,  pointers.get(i) + 1);
