@@ -16,7 +16,18 @@ public class CC
 			System.out.println(db[i]);
 		}
 
+		List<List<String>> transaction_list = new ArrayList<ArrayList<String>();
+		List<List<String>> transaction_locks = new ArrayList<ArrayList<String>();
+		List<Integer> pointers = new ArrayList<Integer>();
 
+		for ( String str : transactions ){
+			List<String> transaction = new ArrayList<String>(Arrays.asList(str.split(";")));
+			transaction_list.add(transaction);
+			transaction_locks.add(new ArrayList<String>() );
+			pointers.add(0);
+		}
+
+/*
 		List<String> t1 = new ArrayList<String>(Arrays.asList(transactions.get(0).split(";")));
 		List<String> t2 = new ArrayList<String>(Arrays.asList(transactions.get(1).split(";")));
 		List<String> t3 = new ArrayList<String>();
@@ -36,10 +47,15 @@ public class CC
 		int t2_size = t2.size();
 		int t3_size = t3.size();
 
+*/
 		maxSize = Math.max( Math.max(t1_size, t2_size) , t3_size);
 
+//while none of the commits are done
+//have 3 separate ptrs for t1 and t2 and t3
+
 		int ptr = 0;
-		while ( ptr < maxSize ) {
+
+		while ( ptr < maxSize) {
 
 			if (ptr < t1_size) {
 
@@ -50,6 +66,7 @@ public class CC
 					
 					if (  !t2_locks.contains(exclusiveLock) && !t3_locks.contains(exclusiveLock) && !t1_locks.contains(sharedLock) && !t1_locks.contains(exclusiveLock) ) {
 						t1_locks.add(sharedLock);
+						System.out.println( t1.get(ptr));
 					}
 
 				}
@@ -67,6 +84,7 @@ public class CC
 						//upgrade the shared lock to an exclusive lock
 						int index = t1_locks.indexOf(sharedLock);
 						t1_locks.set(index, exclusiveLock);
+						System.out.println( t1.get(ptr));
 					}
 
 					//When a write operation is encountered, attempt to acquire an 
@@ -74,6 +92,7 @@ public class CC
 					//only if there is no other lock on that record from another transaction. 
 					if ( !t2_locks.contains(sharedLock)  && !t2_locks.contains(exclusiveLock) && !t3_locks.contains(sharedLock) && !t3_locks.contains(exclusiveLock) ) {
 						t1_locks.add(exclusiveLock);
+						System.out.println( t1.get(ptr));
 					}
 
 				}
@@ -82,7 +101,6 @@ public class CC
 					t1_locks.clear();
 				}
 
-				System.out.println( t1.get(ptr));
 			}
 
 			if (ptr < t2_size) {
@@ -94,6 +112,7 @@ public class CC
 					
 					if (  !t1_locks.contains(exclusiveLock) && !t3_locks.contains(exclusiveLock) && !t2_locks.contains(sharedLock) && !t2_locks.contains(exclusiveLock)) {
 						t2_locks.add(sharedLock);
+						System.out.println( t2.get(ptr));
 					}
 
 				}
@@ -111,6 +130,7 @@ public class CC
 						//upgrade the shared lock to an exclusive lock
 						int index = t2_locks.indexOf(sharedLock);
 						t2_locks.set(index, exclusiveLock);
+						System.out.println( t2.get(ptr));
 					}
 
 					//When a write operation is encountered, attempt to acquire an 
@@ -118,6 +138,7 @@ public class CC
 					//only if there is no other lock on that record from another transaction. 
 					if ( !t1_locks.contains(sharedLock)  && !t1_locks.contains(exclusiveLock) && !t3_locks.contains(sharedLock) && !t3_locks.contains(exclusiveLock) ) {
 						t2_locks.add(exclusiveLock);
+						System.out.println( t2.get(ptr));
 					}
 
 				}
@@ -126,7 +147,7 @@ public class CC
 					t2_locks.clear();
 				}
 
-				System.out.println( t2.get(ptr));
+				
 			}
 
 			if (ptr < t3_size) {
@@ -138,6 +159,7 @@ public class CC
 					
 					if (  !t1_locks.contains(exclusiveLock) && !t2_locks.contains(exclusiveLock) && !t3_locks.contains(sharedLock) && !t3_locks.contains(exclusiveLock)) {
 						t3_locks.add(sharedLock);
+						System.out.println( t3.get(ptr));
 					}
 
 				}
@@ -155,6 +177,7 @@ public class CC
 						//upgrade the shared lock to an exclusive lock
 						int index = t3_locks.indexOf(sharedLock);
 						t3_locks.set(index, exclusiveLock);
+						System.out.println( t3.get(ptr));
 					}
 
 					//When a write operation is encountered, attempt to acquire an 
@@ -162,6 +185,7 @@ public class CC
 					//only if there is no other lock on that record from another transaction. 
 					if ( !t1_locks.contains(sharedLock)  && !t1_locks.contains(exclusiveLock) && !t2_locks.contains(sharedLock) && !t2_locks.contains(exclusiveLock) ) {
 						t3_locks.add(exclusiveLock);
+						System.out.println( t3.get(ptr));
 					}
 
 				}
@@ -170,7 +194,7 @@ public class CC
 					t3_locks.clear();
 				}
 
-				System.out.println( t3.get(ptr));
+			
 			}
 
 		ptr++;
