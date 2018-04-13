@@ -89,7 +89,7 @@ public class CC
 						//processed transaction here
 						        //method 1
 						int transaction_number = i + 1;
-        				System.out.println( "R:" + timestamp + ",T" + transaction_number) ;
+        				System.out.println( "R:" + timestamp + ",T" + transaction_number + "," + transaction.get(ptr).charAt(2)  ) ;
         				timestamp++;
 
 
@@ -124,7 +124,7 @@ public class CC
 						        //method 1
 
 						int transaction_number = i + 1;
-       		 			System.out.println( "W:" + timestamp + ",T" + transaction_number) ;
+       		 			System.out.println( "W:" + timestamp + ",T" + transaction_number + "," + transaction.get(ptr).charAt(2)  ) ;
        		 			timestamp++;
 
 
