@@ -45,9 +45,9 @@ public class CC
 //have 3 separate ptrs for t1 and t2 and t3
 
 		boolean completed = false; 
-
+		int timestamp = 0 ;
 		while ( !completed ) {
-
+			
 			completed = true;
 			for (int i = 0; i < transactions.size(); i++) {
 				if ( pointers.get(i) < transaction_list.get(i).size() ) {
@@ -63,6 +63,7 @@ public class CC
 			
 			for (int i = 0 ; i < transactions.size(); i++) {
 
+
 				if ( pointers.get(i) < transaction_list.get(i).size() ) {
 
 					List<String> transaction = transaction_list.get(i);
@@ -70,7 +71,7 @@ public class CC
 
 						
 					if ( transaction.get(ptr).charAt(0) == 'R') {
-						
+						timestamp++;
 						String s = Character.toString( transaction.get(ptr).charAt(2) );
 						String sharedLock = "S(" + s + ")" ; 
 						String exclusiveLock = "X(" + s + ")" ; 
@@ -87,14 +88,15 @@ public class CC
 
 						//processed transaction here
 						        //method 1
-        				Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+
         				System.out.println(timestamp);
+
 
 					}
 
 					
 					else if ( transaction.get(ptr).charAt(0) == 'W') {
-						
+						timestamp++;
 						String s = Character.toString( transaction.get(ptr).charAt(2) );
 						String sharedLock = "S(" + s + ")" ; 
 						String exclusiveLock = "X(" + s + ")" ; 
@@ -119,17 +121,18 @@ public class CC
 						int db_index = Character.getNumericValue(transaction.get(ptr).charAt(2) ) ;
 						db[db_index] = Character.getNumericValue( transaction.get(ptr).charAt(4) );
 						        //method 1
-        				Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+
        		 			System.out.println(timestamp);
+
 
 					}
 
 					else if ( transaction.get(ptr).charAt(0) == 'C') {
-						
+						timestamp++;
 						//clear all locks
 						transaction_locks.get(i).clear();
 						        //method 1
-       					Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+
         				System.out.println(timestamp);
 					}
 
@@ -137,7 +140,7 @@ public class CC
 				}
 				
 			}
-
+		
 		}
 
 		return db;
