@@ -88,8 +88,8 @@ public class CC
 
 						//processed transaction here
 						        //method 1
-
-        				System.out.println(timestamp);
+						int transaction_number = i + 1;
+        				System.out.println( "R:" + timestamp + ",T" + transaction_number) ;
         				timestamp++;
 
 
@@ -123,7 +123,8 @@ public class CC
 						db[db_index] = Character.getNumericValue( transaction.get(ptr).charAt(4) );
 						        //method 1
 
-       		 			System.out.println(timestamp);
+						int transaction_number = i + 1;
+       		 			System.out.println( "W:" + timestamp + ",T" + transaction_number) ;
        		 			timestamp++;
 
 
@@ -134,8 +135,8 @@ public class CC
 						//clear all locks
 						transaction_locks.get(i).clear();
 						        //method 1
-
-        				System.out.println(timestamp);
+						int transaction_number = i + 1;
+						System.out.println( "C:" + timestamp + ",T" + transaction_number) ;
         				timestamp++;
 					}
 
