@@ -4,6 +4,9 @@ import java.util.Arrays;
 import java.lang.Math;
 import java.sql.Timestamp;
 
+//write add old and new values to log
+//add pointer to prev log entry
+
 public class CC
 {
 	//Execute all given transactions, using locking.
@@ -99,6 +102,8 @@ public class CC
 
 					
 					else if ( transaction.get(ptr).charAt(0) == 'W') {
+
+						
 						
 						String s = Character.toString( transaction.get(ptr).charAt(2) );
 						String sharedLock = "S(" + s + ")" ; 
@@ -122,11 +127,12 @@ public class CC
 
 						//process the transaction
 						int db_index = Character.getNumericValue(transaction.get(ptr).charAt(2) ) ;
-						db[db_index] = Character.getNumericValue( transaction.get(ptr).charAt(4) );
+						int old_value = db[db_index] ;
+						db[db_index] = Character.getNumericValue( transaction.get(ptr).charAt(4) ); //new value
 						        //method 1
 
 						int transaction_number = i + 1;
-       		 			System.out.println( "W:" + timestamp + ",T" + transaction_number + "," + transaction.get(ptr).charAt(2)  ) ;
+       		 			System.out.println( "W:" + timestamp + ",T" + transaction_number + "," + transaction.get(ptr).charAt(2) + "," + old_value + "," + db[db_index] ) ;
        		 			timestamp++;
 
 
