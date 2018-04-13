@@ -2,6 +2,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.lang.Math;
+import java.sql.Timestamp;
 
 public class CC
 {
@@ -59,6 +60,7 @@ public class CC
 				break;
 			}
 
+			
 			for (int i = 0 ; i < transactions.size(); i++) {
 
 				if ( pointers.get(i) < transaction_list.get(i).size() ) {
@@ -68,6 +70,7 @@ public class CC
 
 						
 					if ( transaction.get(ptr).charAt(0) == 'R') {
+						
 						String s = Character.toString( transaction.get(ptr).charAt(2) );
 						String sharedLock = "S(" + s + ")" ; 
 						String exclusiveLock = "X(" + s + ")" ; 
@@ -83,12 +86,15 @@ public class CC
 						}
 
 						//processed transaction here
-						System.out.println(transaction);
+						        //method 1
+        				Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        				System.out.println(timestamp);
 
 					}
 
 					
 					else if ( transaction.get(ptr).charAt(0) == 'W') {
+						
 						String s = Character.toString( transaction.get(ptr).charAt(2) );
 						String sharedLock = "S(" + s + ")" ; 
 						String exclusiveLock = "X(" + s + ")" ; 
@@ -112,19 +118,24 @@ public class CC
 						//process the transaction
 						int db_index = Character.getNumericValue(transaction.get(ptr).charAt(2) ) ;
 						db[db_index] = Character.getNumericValue( transaction.get(ptr).charAt(4) );
-						System.out.println(transaction);
+						        //method 1
+        				Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+       		 			System.out.println(timestamp);
 
 					}
 
 					else if ( transaction.get(ptr).charAt(0) == 'C') {
+						
 						//clear all locks
 						transaction_locks.get(i).clear();
-						System.out.println(transaction);
+						        //method 1
+       					Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        				System.out.println(timestamp);
 					}
 
 					pointers.set( i,  pointers.get(i) + 1);
 				}
-
+				
 			}
 
 		}
