@@ -89,7 +89,9 @@ public class CC
 						//processed transaction here
 						        //method 1
 						int transaction_number = i + 1;
-        				System.out.println( "R:" + timestamp + ",T" + transaction_number + "," + transaction.get(ptr).charAt(2)  ) ;
+						int db_index = Character.getNumericValue(transaction.get(ptr).charAt(2) ) ;
+						int value_read = db[db_index];
+        				System.out.println( "R:" + timestamp + ",T" + transaction_number + "," + transaction.get(ptr).charAt(2) + "," + value_read ) ;
         				timestamp++;
 
 
