@@ -25,7 +25,7 @@ public class Project4
 		
 		System.out.println("Handout Test Case:\n\t" + Arrays.toString(CC.executeSchedule(newDB(),tc1)) + "\n");
 		System.out.println("Three Transactions Test Case:\n\t" + Arrays.toString(CC.executeSchedule(newDB(),tc2)) + "\n");
-		System.out.println("Deadlocks Test Case:\n\t" + Arrays.toString(CC.executeSchedule(newDB(),tc3)) + "\n");
+		//System.out.println("Deadlocks Test Case:\n\t" + Arrays.toString(CC.executeSchedule(newDB(),tc3)) + "\n");
 		System.out.println("No Conflicts Test Case:\n\t" + Arrays.toString(CC.executeSchedule(newDB(),tc4)) + "\n");
 			
 			
