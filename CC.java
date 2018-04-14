@@ -14,6 +14,19 @@ public class CC
 	//The index of the transaction in the list is equivalent to the transaction ID.
 	//Print the log to either the console or a file at the end of the method. Return the new db state after executing the transactions.
 
+	private static boolean dfs (int i, List<Boolean> visited, List<HashSet<Integer>> wait_for_graph ) {
+		visited.set(i, true) ; 	
+		
+		for ( Integer node : wait_for_graph.get(i) ) {
+			if (visited.get(node) ) {
+				return true;
+			} else if ( dfs(node, visited, wait_for_graph)  ) {
+				return true;
+			}
+		}
+
+		return false;	
+	}
 
 
 	private static Integer otherTransactionsContainLock( List<ArrayList<String>> transaction_locks, String lock, int current ) {
@@ -29,8 +42,22 @@ public class CC
 		return null; 
 	}
 
-	private static boolean cycleExists () {
+	private static boolean cycleExists ( List<HashSet<Integer>> wait_for_graph ) {
 		
+
+		for (int i = 0; i <wait_for_graph.size(); i++) {
+			List<Boolean> visited = new ArrayList<Boolean>();
+			for ( int j = 0; j < wait_for_graph.size(); j++) {
+				visited.add(false);
+			}
+
+
+			if ( dfs(i, visited, wait_for_graph)  ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	public static int[] executeSchedule(int[] db, List<String> transactions)
@@ -61,6 +88,7 @@ public class CC
 		
 
 		while ( !completed ) {
+
 			
 			completed = true;
 			for (int i = 0; i < transactions.size(); i++) {
@@ -71,6 +99,13 @@ public class CC
 			}
 
 			if ( completed ) {
+				break;
+			}
+
+
+			if (cycleExists (wait_for_graph) ) {
+				//we have a deadlock
+				System.out.println( " dead lock ");
 				break;
 			}
 
@@ -169,6 +204,10 @@ public class CC
 						
 						//clear all locks
 						transaction_locks.get(i).clear();
+
+						for (int j = 0; j < wait_for_graph.get(i).size(); j++ ) {
+							wait_for_graph.get(j).remove(i);
+						}
 						        //method 1
 						int transaction_number = i + 1;
 						System.out.println( "C:" + timestamp + ",T" + transaction_number + "," + previous_timestamp.get(i) ) ;
