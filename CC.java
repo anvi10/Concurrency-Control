@@ -3,7 +3,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.lang.Math;
 import java.sql.Timestamp;
-
+import java.util.HashSet;
 //add pointer to prev log entry
 
 public class CC
@@ -15,41 +15,27 @@ public class CC
 	//Print the log to either the console or a file at the end of the method. Return the new db state after executing the transactions.
 
 
-	private static boolean waitfor( List<String> transactions) {
-		//length of adjacency matrix
-		int length = 0;
-		List<String> individual_transactions = new ArrayList<String>();
-		for (int i = 0; i < transactions.size(); i++) {
-			String s = transactions.get(i);
-			//List<String> temp = transactions.get(i).split(";");
-			//length += temp.size();
-			List<String> temp = Arrays.asList(s.split(";")) ;
-			length += temp.size();
-		}
 
-		System.out.println("length of adjacency matrix " + length);
-
-	return true;
-	}
-
-	private static boolean otherTransactionsContainLock( List<ArrayList<String>> transaction_locks, String lock, int current ) {
+	private static Integer otherTransactionsContainLock( List<ArrayList<String>> transaction_locks, String lock, int current ) {
 		for (int i = 0 ; i < transaction_locks.size(); i++ ) {
 			if ( i == current) {
 				continue;
 			}
 
 			if ( transaction_locks.get(i).contains(lock) ) {
-				return true;
+				return i;
 			} 
 		}
-		return false; 
+		return null; 
 	}
 
+	private static boolean cycleExists () {
+		
+	}
 
 	public static int[] executeSchedule(int[] db, List<String> transactions)
 	{
 
-		waitfor(transactions);
 
 		List<ArrayList<String>> transaction_list = new ArrayList<ArrayList<String>>();
 		List<ArrayList<String>> transaction_locks = new ArrayList<ArrayList<String>>();
@@ -57,11 +43,15 @@ public class CC
 
 		List<Integer> previous_timestamp = new ArrayList<Integer>();
 
+		List<HashSet<Integer>> wait_for_graph = new ArrayList<HashSet<Integer>>();
+
+
 		for ( String str : transactions ){
 			transaction_list.add(new ArrayList<String>(Arrays.asList(str.split(";"))));
 			transaction_locks.add(new ArrayList<String>() );
 			pointers.add(0);
 			previous_timestamp.add(-1);
+			wait_for_graph.add( new HashSet<Integer>() );
 		}
 
 
@@ -99,8 +89,10 @@ public class CC
 						String sharedLock = "S(" + s + ")" ; 
 						String exclusiveLock = "X(" + s + ")" ; 
 
-						//check if any other has an exclusive lock on this
-						if ( otherTransactionsContainLock ( transaction_locks, exclusiveLock, i ) ) {
+						//check if any other has an exclusive lock on this\
+						Integer node = otherTransactionsContainLock ( transaction_locks, exclusiveLock, i ) ;
+						if ( node != null ) {
+							wait_for_graph.get(i).add( node);
 							continue;
 						}
 						
@@ -131,9 +123,22 @@ public class CC
 						String exclusiveLock = "X(" + s + ")" ; 
 
 						//no other transaction contains an exclusive lock or shared lock on our record
-						if (  otherTransactionsContainLock(transaction_locks, exclusiveLock,i) || otherTransactionsContainLock(transaction_locks, sharedLock, i) ) {
+
+						Integer node1 = otherTransactionsContainLock ( transaction_locks, exclusiveLock, i ) ;
+						Integer node2 = otherTransactionsContainLock ( transaction_locks, sharedLock, i ) ;
+
+						if ( node1 != null || node2 != null) {
+
+							if (node1 != null) {
+								wait_for_graph.get(i).add( node1);
+							}
+							if (node2 != null) {
+								wait_for_graph.get(i).add( node2);
+							}
 							continue;
 						}
+
+
 
 						//upgrade our lock to exclusive lock if we have a shared lock
 						if ( transaction_locks.get(i).contains(sharedLock)  ) {
