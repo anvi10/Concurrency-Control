@@ -20,6 +20,10 @@ public class Project4
 		List<String> tc3 = Arrays.asList(new String[]{"W(4,1);R(1);W(1,2);C","W(5,2);R(1);R(2);W(2,3);C","W(6,3);R(2);W(2,4);C"});
 		//4) No conflicts
 		List<String> tc4 = Arrays.asList(new String[]{"R(1);R(2);R(3);W(4,1);C","R(1);R(2);R(3);W(5,2);C"});
+		//5) Multiple Deadlocks
+		List<String> tc5 = Arrays.asList(new String[]{"R(1);W(2,1);C","R(2);R(3);W(1,2);C","R(1);W(3,3);C"});
+		//6) Larger Deadlock Cycle
+		List<String> tc6 = Arrays.asList(new String[]{"R(1);W(2,1);C","R(2);W(3,2);C","R(3);W(4,3);C","R(4);W(1,4);C"});
 		
 		//Consult the ExpectedOutputs.txt for the expected DB state and log
 		
@@ -27,7 +31,7 @@ public class Project4
 		System.out.println("Three Transactions Test Case:\n\t" + Arrays.toString(CC.executeSchedule(newDB(),tc2)) + "\n");
 		//System.out.println("Deadlocks Test Case:\n\t" + Arrays.toString(CC.executeSchedule(newDB(),tc3)) + "\n");
 		System.out.println("No Conflicts Test Case:\n\t" + Arrays.toString(CC.executeSchedule(newDB(),tc4)) + "\n");
-			
-			
+		//System.out.println("Multiple Deadlocks Test Case:\n\t" + Arrays.toString(CC.executeSchedule(newDB(),tc5)) + "\n");
+		//System.out.println("Larger Deadlock Cycle Test Case:\n\t" + Arrays.toString(CC.executeSchedule(newDB(),tc6)) + "\n");	
 	}
 }

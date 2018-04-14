@@ -14,6 +14,24 @@ public class CC
 	//The index of the transaction in the list is equivalent to the transaction ID.
 	//Print the log to either the console or a file at the end of the method. Return the new db state after executing the transactions.
 
+
+	private static boolean waitfor( List<String> transactions) {
+		//length of adjacency matrix
+		int length = 0;
+		List<String> individual_transactions = new ArrayList<String>();
+		for (int i = 0; i < transactions.size(); i++) {
+			String s = transactions.get(i);
+			//List<String> temp = transactions.get(i).split(";");
+			//length += temp.size();
+			List<String> temp = Arrays.asList(s.split(";")) ;
+			length += temp.size();
+		}
+
+		System.out.println("length of adjacency matrix " + length);
+
+	return true;
+	}
+
 	private static boolean otherTransactionsContainLock( List<ArrayList<String>> transaction_locks, String lock, int current ) {
 		for (int i = 0 ; i < transaction_locks.size(); i++ ) {
 			if ( i == current) {
@@ -31,23 +49,27 @@ public class CC
 	public static int[] executeSchedule(int[] db, List<String> transactions)
 	{
 
+		waitfor(transactions);
 
 		List<ArrayList<String>> transaction_list = new ArrayList<ArrayList<String>>();
 		List<ArrayList<String>> transaction_locks = new ArrayList<ArrayList<String>>();
 		List<Integer> pointers = new ArrayList<Integer>();
 
+		List<Integer> previous_timestamp = new ArrayList<Integer>();
+
 		for ( String str : transactions ){
 			transaction_list.add(new ArrayList<String>(Arrays.asList(str.split(";"))));
 			transaction_locks.add(new ArrayList<String>() );
 			pointers.add(0);
+			previous_timestamp.add(-1);
 		}
 
 
-//while none of the commits are done
-//have 3 separate ptrs for t1 and t2 and t3
 
 		boolean completed = false; 
 		int timestamp = 0 ;
+		
+
 		while ( !completed ) {
 			
 			completed = true;
@@ -62,9 +84,8 @@ public class CC
 				break;
 			}
 
-			int prev_time = -1 ;
+		
 			for (int i = 0 ; i < transactions.size(); i++) {
-				
 
 				if ( pointers.get(i) < transaction_list.get(i).size() ) {
 
@@ -93,9 +114,9 @@ public class CC
 						int transaction_number = i + 1;
 						int db_index = Character.getNumericValue(transaction.get(ptr).charAt(2) ) ;
 						int value_read = db[db_index];
-        				System.out.println( "R:" + timestamp + ",T" + transaction_number + "," + transaction.get(ptr).charAt(2) + "," + value_read + "," + prev_time ) ;
+        				System.out.println( "R:" + timestamp + ",T" + transaction_number + "," + transaction.get(ptr).charAt(2) + "," + value_read + "," + previous_timestamp.get(i) ) ;
         				timestamp++;
-        				prev_time = timestamp - 1;
+        				previous_timestamp.set( i, timestamp - 1);
 
 
 					}
@@ -132,9 +153,9 @@ public class CC
 						        //method 1
 
 						int transaction_number = i + 1;
-       		 			System.out.println( "W:" + timestamp + ",T" + transaction_number + "," + transaction.get(ptr).charAt(2) + "," + old_value + "," + db[db_index] + "," + prev_time) ;
+       		 			System.out.println( "W:" + timestamp + ",T" + transaction_number + "," + transaction.get(ptr).charAt(2) + "," + old_value + "," + db[db_index] + "," + previous_timestamp.get(i)) ;
        		 			timestamp++;
-       		 			prev_time = timestamp - 1;
+       		 			previous_timestamp.set( i, timestamp - 1);
 
 
 					}
@@ -145,9 +166,9 @@ public class CC
 						transaction_locks.get(i).clear();
 						        //method 1
 						int transaction_number = i + 1;
-						System.out.println( "C:" + timestamp + ",T" + transaction_number + "," + prev_time ) ;
+						System.out.println( "C:" + timestamp + ",T" + transaction_number + "," + previous_timestamp.get(i) ) ;
         				timestamp++;
-        				prev_time = timestamp - 1;
+        				previous_timestamp.set( i, timestamp - 1);
 					}
 
 					pointers.set( i,  pointers.get(i) + 1);
