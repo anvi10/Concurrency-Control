@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.lang.Math;
 import java.sql.Timestamp;
 import java.util.HashSet;
+import java.util.Stack;
 //add pointer to prev log entry
 
 public class CC
@@ -14,19 +15,39 @@ public class CC
 	//The index of the transaction in the list is equivalent to the transaction ID.
 	//Print the log to either the console or a file at the end of the method. Return the new db state after executing the transactions.
 
-	private static boolean dfs (int i, List<Boolean> visited, List<HashSet<Integer>> wait_for_graph ) {
-		visited.set(i, true) ; 	
-		
-		for ( Integer node : wait_for_graph.get(i) ) {
-			if (visited.get(node) ) {
-				return true;
-			} else if ( dfs(node, visited, wait_for_graph)  ) {
-				return true;
-			}
+	//i is start point of dfs
+	private static List<Integer> dfs (int i, List<Boolean> visited, List<HashSet<Integer>> wait_for_graph ) {
+		Stack<Integer> stack = new Stack<Integer>();
+		List<Integer> previous = new ArrayList<Integer>();
+		for (Object o : wait_for_graph) {
+			previous.add(null);
 		}
 
-		return false;	
+		stack.push(i);
+		while (!stack.empty()) {
+			int curr = stack.pop();
+			visited.set(curr, true);
+
+			for ( int child : wait_for_graph.get(curr)) {
+				if (! visited.get(child) ) {
+					stack.push(child);
+					previous.set(child, curr);
+				} else {
+					List<Integer> cycle = new ArrayList<Integer>(); 
+					int node = curr;
+					while (node != child) {
+						cycle.add(node);
+						node = previous.get(node);
+					}
+					cycle.add(child);
+					return cycle;
+				}
+			}
+
+		}
+		return null;
 	}
+
 
 
 	private static Integer otherTransactionsContainLock( List<ArrayList<String>> transaction_locks, String lock, int current ) {
@@ -42,7 +63,7 @@ public class CC
 		return null; 
 	}
 
-	private static boolean cycleExists ( List<HashSet<Integer>> wait_for_graph ) {
+	private static List<Integer> cycleExists ( List<HashSet<Integer>> wait_for_graph ) {
 		
 
 		for (int i = 0; i <wait_for_graph.size(); i++) {
@@ -51,18 +72,20 @@ public class CC
 				visited.add(false);
 			}
 
+			List<Integer> result = dfs(i, visited, wait_for_graph);
+			if (result != null) {
+				return result;
+			} 
 
-			if ( dfs(i, visited, wait_for_graph)  ) {
-				return true;
-			}
 		}
 
-		return false;
+		return null;
 	}
 
 	public static int[] executeSchedule(int[] db, List<String> transactions)
 	{
 
+		List<String> log = new ArrayList<String>();
 
 		List<ArrayList<String>> transaction_list = new ArrayList<ArrayList<String>>();
 		List<ArrayList<String>> transaction_locks = new ArrayList<ArrayList<String>>();
@@ -79,6 +102,7 @@ public class CC
 			pointers.add(0);
 			previous_timestamp.add(-1);
 			wait_for_graph.add( new HashSet<Integer>() );
+			
 		}
 
 
@@ -102,11 +126,47 @@ public class CC
 				break;
 			}
 
-
-			if (cycleExists (wait_for_graph) ) {
+			while(true) {
+				List<Integer> result = cycleExists(wait_for_graph);
+				if (result == null) {
+					break;
+				}
 				//we have a deadlock
-				System.out.println( " dead lock ");
-				break;
+				int max = -1; 
+				for (int j = 0; j < result.size(); j++) {
+					if (result.get(j ) > max) {
+						max = result.get(j);
+					}
+				}
+
+				for (int s = log.size() - 1 ; s >= 0; s--) {
+					String entry = log.get(s);
+					if (entry.charAt(0) != 'W') {
+						continue;
+					}
+
+					String [] parsed = entry.split(",");
+
+					if ( parsed[1].equals( "T" + (max+1) ) ) {
+						int record = Integer.parseInt(parsed[2]);
+						int old_value = Integer.parseInt(parsed[3]);
+						db[old_value] = record;
+					}
+				}
+
+				wait_for_graph.get(max).clear();
+
+				for (int j = 0; j < wait_for_graph.size(); j++ ) {
+					wait_for_graph.get(j).remove(max);
+
+				}
+
+				transaction_locks.get(max).clear();
+				pointers.set(max, 0);
+				
+				log.add("A:" + timestamp + "," + "T" + (max+1) + "," + previous_timestamp.get(max) );
+				previous_timestamp.set(max, timestamp);
+				timestamp++;
 			}
 
 		
@@ -128,6 +188,7 @@ public class CC
 						Integer node = otherTransactionsContainLock ( transaction_locks, exclusiveLock, i ) ;
 						if ( node != null ) {
 							wait_for_graph.get(i).add( node);
+							
 							continue;
 						}
 						
@@ -141,7 +202,7 @@ public class CC
 						int transaction_number = i + 1;
 						int db_index = Character.getNumericValue(transaction.get(ptr).charAt(2) ) ;
 						int value_read = db[db_index];
-        				System.out.println( "R:" + timestamp + ",T" + transaction_number + "," + transaction.get(ptr).charAt(2) + "," + value_read + "," + previous_timestamp.get(i) ) ;
+        				log.add("R:" + timestamp + ",T" + transaction_number + "," + transaction.get(ptr).charAt(2) + "," + value_read + "," + previous_timestamp.get(i));
         				timestamp++;
         				previous_timestamp.set( i, timestamp - 1);
 
@@ -166,9 +227,11 @@ public class CC
 
 							if (node1 != null) {
 								wait_for_graph.get(i).add( node1);
+								
 							}
 							if (node2 != null) {
 								wait_for_graph.get(i).add( node2);
+								
 							}
 							continue;
 						}
@@ -193,7 +256,8 @@ public class CC
 						        //method 1
 
 						int transaction_number = i + 1;
-       		 			System.out.println( "W:" + timestamp + ",T" + transaction_number + "," + transaction.get(ptr).charAt(2) + "," + old_value + "," + db[db_index] + "," + previous_timestamp.get(i)) ;
+       		 			
+       		 			log.add("W:" + timestamp + ",T" + transaction_number + "," + transaction.get(ptr).charAt(2) + "," + old_value + "," + db[db_index] + "," + previous_timestamp.get(i));
        		 			timestamp++;
        		 			previous_timestamp.set( i, timestamp - 1);
 
@@ -205,12 +269,15 @@ public class CC
 						//clear all locks
 						transaction_locks.get(i).clear();
 
-						for (int j = 0; j < wait_for_graph.get(i).size(); j++ ) {
+						wait_for_graph.get(i).clear();
+
+						for (int j = 0; j < wait_for_graph.size(); j++ ) {
 							wait_for_graph.get(j).remove(i);
 						}
 						        //method 1
 						int transaction_number = i + 1;
-						System.out.println( "C:" + timestamp + ",T" + transaction_number + "," + previous_timestamp.get(i) ) ;
+					
+						log.add( "C:" + timestamp + ",T" + transaction_number + "," + previous_timestamp.get(i) );
         				timestamp++;
         				previous_timestamp.set( i, timestamp - 1);
 					}
@@ -220,6 +287,10 @@ public class CC
 				
 			}
 		
+		}
+
+		for ( String s : log ) {
+			System.out.println(s);
 		}
 
 		return db;

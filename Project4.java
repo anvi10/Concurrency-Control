@@ -31,7 +31,7 @@ public class Project4
 		System.out.println("Three Transactions Test Case:\n\t" + Arrays.toString(CC.executeSchedule(newDB(),tc2)) + "\n");
 		System.out.println("Deadlocks Test Case:\n\t" + Arrays.toString(CC.executeSchedule(newDB(),tc3)) + "\n");
 		System.out.println("No Conflicts Test Case:\n\t" + Arrays.toString(CC.executeSchedule(newDB(),tc4)) + "\n");
-		//System.out.println("Multiple Deadlocks Test Case:\n\t" + Arrays.toString(CC.executeSchedule(newDB(),tc5)) + "\n");
-		//System.out.println("Larger Deadlock Cycle Test Case:\n\t" + Arrays.toString(CC.executeSchedule(newDB(),tc6)) + "\n");	
+		System.out.println("Multiple Deadlocks Test Case:\n\t" + Arrays.toString(CC.executeSchedule(newDB(),tc5)) + "\n");
+		System.out.println("Larger Deadlock Cycle Test Case:\n\t" + Arrays.toString(CC.executeSchedule(newDB(),tc6)) + "\n");	
 	}
 }
