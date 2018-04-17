@@ -126,6 +126,8 @@ public class CC
 				break;
 			}
 
+			//deadlock handling. repeating process to check if deadlock exists by using a while loop
+
 			while(true) {
 				List<Integer> result = cycleExists(wait_for_graph);
 				if (result == null) {
@@ -139,8 +141,10 @@ public class CC
 					}
 				}
 
+				//rollback changes
 				for (int s = log.size() - 1 ; s >= 0; s--) {
 					String entry = log.get(s);
+					//For each Write entry encountered, restore the state of the database before that operation 
 					if (entry.charAt(0) != 'W') {
 						continue;
 					}
@@ -156,8 +160,10 @@ public class CC
 
 				wait_for_graph.get(max).clear();
 
+				//remove the aborted transaction from the wait-for graph
 				for (int j = 0; j < wait_for_graph.size(); j++ ) {
 					wait_for_graph.get(j).remove(max);
+					System.out.println("transaction being removed");
 
 				}
 
@@ -170,6 +176,7 @@ public class CC
 			}
 
 		
+			//part 1 (round robin or read, write , commit ) and part 2 (syslog)
 			for (int i = 0 ; i < transactions.size(); i++) {
 
 				if ( pointers.get(i) < transaction_list.get(i).size() ) {
