@@ -95,6 +95,9 @@ public class CC
 
 		List<HashSet<Integer>> wait_for_graph = new ArrayList<HashSet<Integer>>();
 
+		List<Boolean> aborted = new ArrayList<Boolean>();
+
+
 
 		for ( String str : transactions ){
 			transaction_list.add(new ArrayList<String>(Arrays.asList(str.split(";"))));
@@ -102,6 +105,7 @@ public class CC
 			pointers.add(0);
 			previous_timestamp.add(-1);
 			wait_for_graph.add( new HashSet<Integer>() );
+			aborted.add(false);
 			
 		}
 
@@ -126,56 +130,6 @@ public class CC
 				break;
 			}
 
-			//deadlock handling. repeating process to check if deadlock exists by using a while loop
-
-			while(true) {
-				List<Integer> result = cycleExists(wait_for_graph);
-				if (result == null) {
-					break;
-				}
-				//we have a deadlock
-				int max = -1; 
-				for (int j = 0; j < result.size(); j++) {
-					if (result.get(j ) > max) {
-						max = result.get(j);
-					}
-				}
-
-				//rollback changes
-				for (int s = log.size() - 1 ; s >= 0; s--) {
-					String entry = log.get(s);
-					//For each Write entry encountered, restore the state of the database before that operation 
-					if (entry.charAt(0) != 'W') {
-						continue;
-					}
-
-					String [] parsed = entry.split(",");
-
-					if ( parsed[1].equals( "T" + (max+1) ) ) {
-						int record = Integer.parseInt(parsed[2]);
-						int old_value = Integer.parseInt(parsed[3]);
-						db[old_value] = record;
-					}
-				}
-
-				wait_for_graph.get(max).clear();
-
-				//remove the aborted transaction from the wait-for graph
-				for (int j = 0; j < wait_for_graph.size(); j++ ) {
-					wait_for_graph.get(j).remove(max);
-					System.out.println("transaction being removed");
-
-				}
-
-				transaction_locks.get(max).clear();
-				pointers.set(max, 0);
-				
-				log.add("A:" + timestamp + "," + "T" + (max+1) + "," + previous_timestamp.get(max) );
-				previous_timestamp.set(max, timestamp);
-				timestamp++;
-			}
-
-		
 			//part 1 (round robin or read, write , commit ) and part 2 (syslog)
 			for (int i = 0 ; i < transactions.size(); i++) {
 
@@ -184,117 +138,177 @@ public class CC
 					List<String> transaction = transaction_list.get(i);
 					int ptr = pointers.get(i);
 
-						
-					if ( transaction.get(ptr).charAt(0) == 'R') {
-						
-						String s = Character.toString( transaction.get(ptr).charAt(2) );
-						String sharedLock = "S(" + s + ")" ; 
-						String exclusiveLock = "X(" + s + ")" ; 
 
-						//check if any other has an exclusive lock on this\
-						Integer node = otherTransactionsContainLock ( transaction_locks, exclusiveLock, i ) ;
-						if ( node != null ) {
-							wait_for_graph.get(i).add( node);
-							
-							continue;
+								//deadlock handling. repeating process to check if deadlock exists by using a while loop
+
+					while(true) {
+						List<Integer> result = cycleExists(wait_for_graph);
+						if (result == null) {
+							break;
 						}
-						
-						//acquired a lock if we dont already have one
-						if (  !transaction_locks.get(i).contains(sharedLock) && !transaction_locks.get(i).contains(exclusiveLock) ) {
-							transaction_locks.get(i).add(sharedLock);
-						}
-
-						//processed transaction here
-						        //method 1
-						int transaction_number = i + 1;
-						int db_index = Character.getNumericValue(transaction.get(ptr).charAt(2) ) ;
-						int value_read = db[db_index];
-        				log.add("R:" + timestamp + ",T" + transaction_number + "," + transaction.get(ptr).charAt(2) + "," + value_read + "," + previous_timestamp.get(i));
-        				timestamp++;
-        				previous_timestamp.set( i, timestamp - 1);
-
-
-					}
-
-					
-					else if ( transaction.get(ptr).charAt(0) == 'W') {
-
-						
-						
-						String s = Character.toString( transaction.get(ptr).charAt(2) );
-						String sharedLock = "S(" + s + ")" ; 
-						String exclusiveLock = "X(" + s + ")" ; 
-
-						//no other transaction contains an exclusive lock or shared lock on our record
-
-						Integer node1 = otherTransactionsContainLock ( transaction_locks, exclusiveLock, i ) ;
-						Integer node2 = otherTransactionsContainLock ( transaction_locks, sharedLock, i ) ;
-
-						if ( node1 != null || node2 != null) {
-
-							if (node1 != null) {
-								wait_for_graph.get(i).add( node1);
-								
+				//we have a deadlock
+						int max = -1; 
+						for (int j = 0; j < result.size(); j++) {
+							if (result.get(j ) > max) {
+								max = result.get(j);
 							}
-							if (node2 != null) {
-								wait_for_graph.get(i).add( node2);
-								
+						}
+
+				//rollback changes
+						for (int s = log.size() - 1 ; s >= 0; s--) {
+							String entry = log.get(s);
+					//For each Write entry encountered, restore the state of the database before that operation 
+							if (entry.charAt(0) != 'W') {
+								continue;
 							}
-							continue;
+
+							String [] parsed = entry.split(",");
+
+							if ( parsed[1].equals( "T" + (max+1) ) ) {
+								int record = Integer.parseInt(parsed[2]);
+								int old_value = Integer.parseInt(parsed[3]);
+								db[old_value] = record;
+							}
 						}
 
+						wait_for_graph.get(max).clear();
 
-
-						//upgrade our lock to exclusive lock if we have a shared lock
-						if ( transaction_locks.get(i).contains(sharedLock)  ) {
-							int index = transaction_locks.get(i).indexOf(sharedLock);
-							transaction_locks.get(i).set(index, exclusiveLock);
-						}
-
-						//if we dont have an exclusive lock, acquire an exclusive lock
-						if (! transaction_locks.get(i).contains(exclusiveLock)) {
-							transaction_locks.get(i).add(exclusiveLock);
-						}
-
-						//process the transaction
-						int db_index = Character.getNumericValue(transaction.get(ptr).charAt(2) ) ;
-						int old_value = db[db_index] ;
-						db[db_index] = Character.getNumericValue( transaction.get(ptr).charAt(4) ); //new value
-						        //method 1
-
-						int transaction_number = i + 1;
-       		 			
-       		 			log.add("W:" + timestamp + ",T" + transaction_number + "," + transaction.get(ptr).charAt(2) + "," + old_value + "," + db[db_index] + "," + previous_timestamp.get(i));
-       		 			timestamp++;
-       		 			previous_timestamp.set( i, timestamp - 1);
-
-
-					}
-
-					else if ( transaction.get(ptr).charAt(0) == 'C') {
-						
-						//clear all locks
-						transaction_locks.get(i).clear();
-
-						wait_for_graph.get(i).clear();
-
+				//remove the aborted transaction from the wait-for graph
 						for (int j = 0; j < wait_for_graph.size(); j++ ) {
-							wait_for_graph.get(j).remove(i);
+					//System.out.println("transaction being removed" + wait_for_graph.get(j) );
+							wait_for_graph.get(j).remove(max);
+
+
 						}
-						        //method 1
-						int transaction_number = i + 1;
-					
-						log.add( "C:" + timestamp + ",T" + transaction_number + "," + previous_timestamp.get(i) );
-        				timestamp++;
-        				previous_timestamp.set( i, timestamp - 1);
+
+
+						transaction_locks.get(max).clear();
+						pointers.set(max, 0);
+
+						log.add("A:" + timestamp + "," + "T" + (max+1) + "," + previous_timestamp.get(max) );
+
+						aborted.set(max, true);
+
+						previous_timestamp.set(max, timestamp);
+						timestamp++;
 					}
+
+
+
+					if ( aborted.get(i) == false) {			
+						if ( transaction.get(ptr).charAt(0) == 'R') {
+							
+							String s = Character.toString( transaction.get(ptr).charAt(2) );
+							String sharedLock = "S(" + s + ")" ; 
+							String exclusiveLock = "X(" + s + ")" ; 
+
+							//check if any other has an exclusive lock on this\
+							Integer node = otherTransactionsContainLock ( transaction_locks, exclusiveLock, i ) ;
+							if ( node != null ) {
+								wait_for_graph.get(i).add( node);
+								
+								continue;
+							}
+							
+							//acquired a lock if we dont already have one
+							if (  !transaction_locks.get(i).contains(sharedLock) && !transaction_locks.get(i).contains(exclusiveLock) ) {
+								transaction_locks.get(i).add(sharedLock);
+							}
+
+							//processed transaction here
+							        //method 1
+							int transaction_number = i + 1;
+							int db_index = Character.getNumericValue(transaction.get(ptr).charAt(2) ) ;
+							int value_read = db[db_index];
+							log.add("R:" + timestamp + ",T" + transaction_number + "," + transaction.get(ptr).charAt(2) + "," + value_read + "," + previous_timestamp.get(i));
+							timestamp++;
+							previous_timestamp.set( i, timestamp - 1);
+
+
+						}
+
+						
+						else if ( transaction.get(ptr).charAt(0) == 'W') {
+
+							
+							
+							String s = Character.toString( transaction.get(ptr).charAt(2) );
+							String sharedLock = "S(" + s + ")" ; 
+							String exclusiveLock = "X(" + s + ")" ; 
+
+							//no other transaction contains an exclusive lock or shared lock on our record
+
+							Integer node1 = otherTransactionsContainLock ( transaction_locks, exclusiveLock, i ) ;
+							Integer node2 = otherTransactionsContainLock ( transaction_locks, sharedLock, i ) ;
+
+							if ( node1 != null || node2 != null) {
+
+								if (node1 != null) {
+									wait_for_graph.get(i).add( node1);
+									
+								}
+								if (node2 != null) {
+									wait_for_graph.get(i).add( node2);
+									
+								}
+								continue;
+							}
+
+
+
+							//upgrade our lock to exclusive lock if we have a shared lock
+							if ( transaction_locks.get(i).contains(sharedLock)  ) {
+								int index = transaction_locks.get(i).indexOf(sharedLock);
+								transaction_locks.get(i).set(index, exclusiveLock);
+							}
+
+							//if we dont have an exclusive lock, acquire an exclusive lock
+							if (! transaction_locks.get(i).contains(exclusiveLock)) {
+								transaction_locks.get(i).add(exclusiveLock);
+							}
+
+							//process the transaction
+							int db_index = Character.getNumericValue(transaction.get(ptr).charAt(2) ) ;
+							int old_value = db[db_index] ;
+							db[db_index] = Character.getNumericValue( transaction.get(ptr).charAt(4) ); //new value
+							        //method 1
+
+							int transaction_number = i + 1;
+
+							log.add("W:" + timestamp + ",T" + transaction_number + "," + transaction.get(ptr).charAt(2) + "," + old_value + "," + db[db_index] + "," + previous_timestamp.get(i));
+							timestamp++;
+							previous_timestamp.set( i, timestamp - 1);
+
+
+						}
+
+						else if ( transaction.get(ptr).charAt(0) == 'C') {
+							
+							//clear all locks
+							transaction_locks.get(i).clear();
+
+							wait_for_graph.get(i).clear();
+
+							for (int j = 0; j < wait_for_graph.size(); j++ ) {
+								wait_for_graph.get(j).remove(i);
+							}
+							        //method 1
+							int transaction_number = i + 1;
+
+							log.add( "C:" + timestamp + ",T" + transaction_number + "," + previous_timestamp.get(i) );
+							timestamp++;
+							previous_timestamp.set( i, timestamp - 1);
+						}
+
+						
+					} //aborted if
 
 					pointers.set( i,  pointers.get(i) + 1);
-				}
+				} //136
 				
-			}
-		
-		}
+			} //134
+
+		} //while completed
 
 		for ( String s : log ) {
 			System.out.println(s);
@@ -302,5 +316,5 @@ public class CC
 
 		return db;
 
-	}
-}
+	} //execute function
+} //class 
